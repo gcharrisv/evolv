@@ -1,0 +1,44 @@
+.profile-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 2rem;
+  text-align: left;
+}
+
+.profile-display p {
+  margin: 0.5rem 0;
+}
+
+.profile-display button,
+.profile-form button {
+  margin-right: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-form input,
+.profile-form textarea {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+button.danger {
+  background-color: #e03f3f;
+  color: white;
+}
+
+button.secondary {
+  background-color: #ccc;
+}

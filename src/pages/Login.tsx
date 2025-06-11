@@ -12,7 +12,7 @@ function Login() {
         e.preventDefault();
 
         if (email && password) {
-            navigate("/");
+            navigate("/pet");
         } else {
             setError("Please enter both email and password.");
         }
