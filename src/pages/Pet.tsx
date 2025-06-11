@@ -3,6 +3,8 @@ import { EggSelection } from "../components/EggSelection";
 
 type PetType = { type: string } | null;
 
+const base = import.meta.env.BASE_URL;
+
 function Pet() {
   const [pet, setPet] = useState<PetType>(null);
 
@@ -21,7 +23,7 @@ function Pet() {
         You selected the <strong>{pet.type}</strong> egg!
       </p>
       <img
-        src={`/eggs/${pet.type}.png`}
+        src={`${base}assets/${pet.type}_egg.png`}
         alt="Your egg"
         style={{ width: 150 }}
       />

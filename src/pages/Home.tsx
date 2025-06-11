@@ -5,7 +5,10 @@ function Home() {
   return (
     <div className="home">
       <header className="hero">
-        <img src="/logo/egg-icon.png" alt="Evolv Logo" className="hero-logo" />
+        <img
+          src={`${import.meta.env.BASE_URL}assets/evolv_logo.png`}
+          alt="Evolv Logo"
+        />
         <h1>Welcome to Evolv</h1>
         <p>
           Your personal growth companion — evolve yourself by building habits
