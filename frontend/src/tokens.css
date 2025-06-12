@@ -1,0 +1,32 @@
+:root {
+    --primary-color: #4CA8E0;
+    --primary-color-hover: #005fd4;
+    --text-color: #333333;
+    --background-color: #F6FAFB;
+    --border-color: #DCE3E8;
+    --panel-background: #FFFFFF;
+    --secondary-color: #A4D466;
+    --accent-color: #F26D6D;
+
+    /* Dark Mode */
+    --dark-background-color: #121C2B;
+    --dark-text-color: #F3F6F9;
+    --dark-highlight-color: #7FDBFF;
+    --dark-card-background: #1E2A3A;
+}
+
+body.dark {
+    --background-color: var(--dark-background-color);
+    --text-color: var(--dark-text-color);
+    --panel-background: var(--dark-card-background);
+    --highlight-color: var(--dark-highlight-color);
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
