@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { EggSelection } from "../components/EggSelection";
+import { useAuth } from "../auth/AuthContext";
+import { getSelectedPet, saveSelectedPet } from "../services/api";
 import "../Pet.css";
 
 const base = import.meta.env.BASE_URL;
@@ -18,6 +20,7 @@ function getMaxXp(stage: number): number {
 }
 
 function Pet() {
+    const { token } = useAuth();
     const [pet, setPet] = useState<PetType>(null);
     const [showSelectionText, setShowSelectionText] = useState(true);
     const [habits, setHabits] = useState<Habit[]>([
@@ -36,6 +39,19 @@ function Pet() {
     const [celebrating, setCelebrating] = useState(false);
 
     useEffect(() => {
+        async function loadPet() {
+            try {
+                if (!token) return;
+                const savedPet = await getSelectedPet(token);
+                if (savedPet) setPet(savedPet);
+            } catch (err) {
+                console.error("Failed to load saved pet:", err);
+            }
+        }
+        loadPet();
+    }, [token]);
+
+    useEffect(() => {
         if (pet) {
             const timer = setTimeout(() => setShowSelectionText(false), 2000);
             return () => clearTimeout(timer);
@@ -47,9 +63,13 @@ function Pet() {
             const overflow = xp - getMaxXp(pet.stage);
             setIsEvolving(true);
             setTimeout(() => {
-                setPet({ ...pet, stage: pet.stage + 1 });
+                const evolvedPet = { ...pet, stage: pet.stage + 1 };
+                setPet(evolvedPet);
                 setXp(overflow);
                 setIsEvolving(false);
+                if (token) {
+                    saveSelectedPet(evolvedPet, token);
+                }
 
                 if (pet.stage + 1 === 3) {
                     setCelebrating(true);
@@ -57,10 +77,18 @@ function Pet() {
                 }
             }, 1500);
         }
-    }, [xp, pet]);
+    }, [xp, pet, token]);
 
-    function handleEggSelect(eggId: string) {
-        setPet({ type: eggId, stage: 0 });
+    async function handleEggSelect(eggId: string) {
+        const selectedPet = { type: eggId, stage: 0 };
+        setPet(selectedPet);
+        try {
+            if (token) {
+                await saveSelectedPet(selectedPet, token);
+            }
+        } catch (err) {
+            console.error("Failed to save pet:", err);
+        }
     }
 
     function handleToggleComplete(id: number) {
@@ -146,8 +174,7 @@ function Pet() {
                             <div
                                 className="xp-bar-fill"
                                 style={{
-                                    width: `${(xp / getMaxXp(pet.stage)) * 100
-                                        }%`,
+                                    width: `${(xp / getMaxXp(pet.stage)) * 100}%`,
                                 }}
                             ></div>
                         </div>
@@ -168,3 +195,4 @@ function Pet() {
 }
 
 export default Pet;
+

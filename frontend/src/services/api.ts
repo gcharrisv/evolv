@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "/api";
 
 export async function registerUser(email: string, password: string) {
     const res = await fetch(`${API_BASE}/auth/register`, {
@@ -20,10 +20,25 @@ export async function loginUser(email: string, password: string) {
     return res.json();
 }
 
-export async function getProtectedData(path: string, token: string) {
-    const res = await fetch(`${API_BASE}${path}`, {
-        headers: { Authorization: `Bearer ${token}` },
+export async function saveSelectedPet(pet: { type: string; stage: number }, token: string) {
+    const res = await fetch("/api/profile/pet", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(pet),
     });
-    if (!res.ok) throw new Error("Unauthorized");
+    if (!res.ok) throw new Error("Failed to save pet");
+    return res.json();
+}
+
+export async function getSelectedPet(token: string) {
+    const res = await fetch("/api/profile/pet", {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    if (!res.ok) throw new Error("Failed to get pet");
     return res.json();
 }

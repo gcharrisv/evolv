@@ -1,10 +1,10 @@
-import express, { Response } from 'express';
-import { authenticateToken, AuthRequest } from '../middleware/authMiddleware';
+import express, { Response } from "express";
+import { authenticateToken, AuthRequest } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.get('/profile', authenticateToken, (req: AuthRequest, res: Response) => {
-    res.json({ message: `This is a protected profile route! User ID: ${req.userId}` });
+router.get("/", authenticateToken as express.RequestHandler, (req: AuthRequest, res: Response) => {
+    res.json({ message: `Profile data for user ${req.userId}` });
 });
 
 export default router;

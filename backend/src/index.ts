@@ -1,6 +1,6 @@
 import express from "express";
-import path from "path";
 import dotenv from "dotenv";
+import path from "path";
 import connectMongo from "./connectMongo";
 import authRoutes from "./routes/authRoutes";
 import petRoutes from "./routes/petRoutes";
@@ -9,23 +9,22 @@ import profileRoutes from "./routes/profileRoutes";
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
-const frontendPath = path.resolve(__dirname, "../../frontend/dist");
-app.use(express.static(frontendPath));
+const ABS_STATIC_PATH = path.resolve(__dirname, "../../frontend/dist");
+const INDEX_HTML_PATH = path.join(ABS_STATIC_PATH, "index.html");
+
+app.use(express.json());
+app.use(express.static(ABS_STATIC_PATH));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pet", petRoutes);
 app.use("/api/profile", profileRoutes);
 
-app.get("*", (_, res) => {
-    res.sendFile(path.join(frontendPath, "index.html"));
+app.get("*", (_req, res) => {
+    res.sendFile(INDEX_HTML_PATH);
 });
 
-const PORT = process.env.PORT || 3001;
-
 connectMongo().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
 });
