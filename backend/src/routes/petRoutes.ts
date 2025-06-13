@@ -4,27 +4,45 @@ import { authenticateToken, AuthRequest } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// Save selected pet
-router.post("/select", authenticateToken, async (req: AuthRequest, res: Response) => {
+// Save pet and XP
+router.post("/save", authenticateToken, async (req: AuthRequest, res: Response) => {
     try {
-        const { selectedPet } = req.body;
-        await User.findByIdAndUpdate(req.userId, { selectedPet });
-        res.json({ message: "Pet saved!" });
-    } catch {
+        const { pet, xp } = req.body;
+
+        if (!pet || typeof pet.type !== "string" || typeof pet.stage !== "number") {
+            return res.status(400).json({ message: "Invalid pet data" });
+        }
+
+        await User.findByIdAndUpdate(req.userId, {
+            pet: { type: pet.type, stage: pet.stage },
+            xp: typeof xp === "number" ? xp : 0,
+        });
+
+        res.json({ message: "Pet and XP saved!" });
+    } catch (err) {
+        console.error("Save error:", err);
         res.status(500).json({ message: "Error saving pet" });
     }
 });
 
-// Get selected pet
-router.get("/selected", authenticateToken, async (req: AuthRequest, res: Response) => {
+// Load pet and XP
+router.get("/load", authenticateToken, async (req: AuthRequest, res: Response) => {
     try {
         const user = await User.findById(req.userId);
-        res.json({ selectedPet: user?.selectedPet || "" });
-    } catch {
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const pet = user.pet?.type ? user.pet : null;
+        const xp = typeof user.xp === "number" ? user.xp : 0;
+
+        res.json({ pet, xp });
+    } catch (err) {
+        console.error("Load error:", err);
         res.status(500).json({ message: "Error fetching pet" });
     }
 });
 
 export default router;
+
+
 
 

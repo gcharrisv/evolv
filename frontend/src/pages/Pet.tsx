@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { EggSelection } from "../components/EggSelection";
 import { useAuth } from "../auth/AuthContext";
-import { getSelectedPet, saveSelectedPet } from "../services/api";
+import { loadPetData, savePetData } from "../services/api"; // ← updated
 import "../Pet.css";
 
 const base = import.meta.env.BASE_URL;
@@ -22,42 +22,39 @@ function getMaxXp(stage: number): number {
 function Pet() {
     const { token } = useAuth();
     const [pet, setPet] = useState<PetType>(null);
+    const [xp, setXp] = useState(0);
     const [showSelectionText, setShowSelectionText] = useState(true);
     const [habits, setHabits] = useState<Habit[]>([
-        {
-            name: "Drink Water",
-            xp: 10,
-            id: 1,
-            completed: false,
-        },
+        { name: "Drink Water", xp: 10, id: 1, completed: false }
     ]);
-    const [xp, setXp] = useState(0);
     const [showForm, setShowForm] = useState(false);
     const [formName, setFormName] = useState("");
     const [formXp, setFormXp] = useState(10);
     const [isEvolving, setIsEvolving] = useState(false);
     const [celebrating, setCelebrating] = useState(false);
 
+    // Load pet and xp from backend
     useEffect(() => {
-        async function loadPet() {
+        async function load() {
+            if (!token) return;
             try {
-                if (!token) return;
-                const savedPet = await getSelectedPet(token);
-                if (savedPet) setPet(savedPet);
+                const { pet, xp } = await loadPetData(token);
+                if (pet && pet.type) {
+                    setPet(pet);
+                    setXp(xp);
+                    setShowSelectionText(false); // ← don't show animation for returning users
+                } else {
+                    setPet(null);
+                }
             } catch (err) {
-                console.error("Failed to load saved pet:", err);
+                console.error("Failed to load pet data:", err);
             }
         }
-        loadPet();
+        load();
     }, [token]);
 
-    useEffect(() => {
-        if (pet) {
-            const timer = setTimeout(() => setShowSelectionText(false), 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [pet]);
 
+    // Handle stage evolution
     useEffect(() => {
         if (pet && xp >= getMaxXp(pet.stage) && pet.stage < 3 && !isEvolving) {
             const overflow = xp - getMaxXp(pet.stage);
@@ -68,10 +65,10 @@ function Pet() {
                 setXp(overflow);
                 setIsEvolving(false);
                 if (token) {
-                    saveSelectedPet(evolvedPet, token);
+                    savePetData(evolvedPet, overflow, token); // save new state
                 }
 
-                if (pet.stage + 1 === 3) {
+                if (evolvedPet.stage === 3) {
                     setCelebrating(true);
                     setTimeout(() => setCelebrating(false), 2000);
                 }
@@ -82,15 +79,24 @@ function Pet() {
     async function handleEggSelect(eggId: string) {
         const selectedPet = { type: eggId, stage: 0 };
         setPet(selectedPet);
+        setXp(0);
+        setShowSelectionText(true);
+
+        setTimeout(() => {
+            setShowSelectionText(false);
+        }, 2000);
+
         try {
             if (token) {
-                await saveSelectedPet(selectedPet, token);
+                await savePetData(selectedPet, 0, token);
             }
         } catch (err) {
-            console.error("Failed to save pet:", err);
+            console.error("Failed to save selected pet:", err);
         }
     }
 
+
+    // Handle task completion
     function handleToggleComplete(id: number) {
         setHabits((prev) =>
             prev.map((h) =>
@@ -98,9 +104,14 @@ function Pet() {
             )
         );
         const earnedXp = habits.find((h) => h.id === id)?.xp || 0;
-        setXp((prev) => prev + earnedXp);
+        const newXp = xp + earnedXp;
+        setXp(newXp);
+        if (token && pet) {
+            savePetData(pet, newXp, token);
+        }
     }
 
+    // Add new habit
     function handleAddHabit() {
         if (formName && formXp > 0) {
             setHabits((prev) => [
@@ -118,11 +129,12 @@ function Pet() {
         }
     }
 
+    // If no pet selected, show egg selection
     if (!pet) return <EggSelection onSelect={handleEggSelect} />;
 
     let petImage = `${base}assets/${pet.type}_egg.png`;
     if (pet.stage > 0) {
-        const stageName = pet.stage === 1 ? "first" : pet.stage === 2 ? "second" : "second";
+        const stageName = pet.stage === 1 ? "first" : "second";
         petImage = `${base}assets/${pet.type}_${stageName}_evolve.png`;
     }
 
@@ -130,7 +142,6 @@ function Pet() {
         <div className="pet-page">
             <div className="pet-tasks">
                 <h2 onClick={() => setShowForm(!showForm)}>Add Good Habit</h2>
-
                 {showForm && (
                     <div className="habit-form">
                         <input
@@ -148,7 +159,6 @@ function Pet() {
                         <button onClick={handleAddHabit}>Add</button>
                     </div>
                 )}
-
                 <ul>
                     {habits.map((habit) => (
                         <li
